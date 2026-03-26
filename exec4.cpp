@@ -19,21 +19,32 @@ Dica: o operador << deve ser uma friend function ou acessar apenas métodos púb
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <ostream>
 #include <string>
 
 class ContaBancaria {
   public:
-    ContaBancaria(const std::string &titular, const std::uint32_t &numero) : titular_{titular}, numero_{numero} {
+    ContaBancaria(const std::string &titular, std::uint32_t numero) : titular_{titular}, numero_{numero} {
         saldo_ = 0.0;
     }
     ~ContaBancaria() = default;
 
-    void depositar(const double &valor) {}
-    bool sacar(const double &valor) {
-        return false;
+    void depositar(double valor) {
+        saldo_ += valor;
     }
-    void exibir() const {
-        std::cout << "Conta #" << numero_ << " | Titular: " << titular_ << " | Saldo: R$ " << saldo_ << '\n';
+
+    bool sacar(double valor) {
+        if (saldo_ - valor < 0.0) {
+            std::cerr << "Saque de R$ " << valor << " na conta de " << titular_ << ": acesso negado (saldo insuficiente)" << '\n';
+            return false;
+        }
+        saldo_ -= valor;
+        return true;
+    }
+
+    friend std::ostream &operator<<(std::ostream &out, const ContaBancaria &c) {
+        out << "Conta #" << c.numero_ << " | Titular: " << c.titular_ << " | Saldo: R$ " << c.saldo_ << '\n';
+        return out;
     }
 
   private:
@@ -46,5 +57,15 @@ int main() {
 
     ContaBancaria conta_a("Felipe", 1);
     ContaBancaria conta_b("Ana", 2);
+
+    conta_a.depositar(1500.0);
+    conta_b.depositar(500.0);
+
+    conta_a.sacar(1000.0);
+    conta_b.sacar(1000.0);
+
+    std::cout << conta_a;
+    std::cout << conta_b;
+
     return EXIT_SUCCESS;
 }
